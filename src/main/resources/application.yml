@@ -1,0 +1,38 @@
+logging:
+  level:
+    io:
+      grpc: warn
+    com:
+      example:
+        springgrpc: debug
+
+---
+spring:
+  profiles: server
+server:
+  port: 6011
+grpc:
+  server:
+    port: 9090
+    enable-keep-alive: true
+    health-service-enabled: true
+    keep-alive-time: 30s
+    keep-alive-timeout: 10s
+    permit-keep-alive-without-calls: true
+    permit-keep-alive-time: 10s
+---
+spring:
+  profiles: client
+server:
+  port: 6012
+grpc:
+  server:
+    port: -1
+  client:
+    my-service:
+      address: 'static://localhost:9090'
+      negotiationType: plaintext
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      keep-alive-time: 30s
+      keep-alive-timeout: 10s
