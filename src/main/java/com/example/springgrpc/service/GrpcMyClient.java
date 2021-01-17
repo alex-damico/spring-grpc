@@ -22,15 +22,6 @@ public class GrpcMyClient {
   @GrpcClient("my-service")
   private MyServiceBlockingStub myServiceBlockingStub;
 
-  private MyServiceStub myServiceStub = null;
-  private StreamObserver<HelloRequest> streamObserver = null;
-
-  @PostConstruct
-  private void init() {
-    this.myServiceStub = MyServiceGrpc.newStub(myServiceBlockingStub.getChannel());
-    this.streamObserver = myServiceStub.subscribe(getResponseObserver());
-  }
-
   private StreamObserver<HelloResponse> getResponseObserver() {
     return new StreamObserver<HelloResponse>() {
 
@@ -55,9 +46,11 @@ public class GrpcMyClient {
   public void sendRequest() {
     log.info("Start - " + LocalDateTime.now().toString());
     HelloRequest helloRequest = HelloRequest.newBuilder().setText("request").build();
+    MyServiceStub myServiceStub = MyServiceGrpc.newStub(myServiceBlockingStub.getChannel());
+    StreamObserver<HelloRequest> streamObserver = myServiceStub.subscribe(getResponseObserver());
     try {
-      this.streamObserver.onNext(helloRequest);
-      this.streamObserver.onCompleted();
+      streamObserver.onNext(helloRequest);
+      streamObserver.onCompleted();
     } catch (StatusRuntimeException ex) {
       log.info("Error", ex);
     }
