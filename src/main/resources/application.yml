@@ -1,10 +1,7 @@
 logging:
   level:
-    io:
-      grpc: warn
-    com:
-      example:
-        springgrpc: debug
+    io.grpc.netty: warn
+    com.example.springgrpc: debug
 
 ---
 spring:

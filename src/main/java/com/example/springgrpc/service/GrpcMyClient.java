@@ -8,6 +8,7 @@ import com.example.springgrpc.MyServiceGrpc.MyServiceStub;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.time.LocalDateTime;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +21,15 @@ public class GrpcMyClient {
 
   @GrpcClient("my-service")
   private MyServiceBlockingStub myServiceBlockingStub;
+
+  private MyServiceStub myServiceStub = null;
+  private StreamObserver<HelloRequest> streamObserver = null;
+
+  @PostConstruct
+  private void init() {
+    this.myServiceStub = MyServiceGrpc.newStub(myServiceBlockingStub.getChannel());
+    this.streamObserver = myServiceStub.subscribe(getResponseObserver());
+  }
 
   private StreamObserver<HelloResponse> getResponseObserver() {
     return new StreamObserver<HelloResponse>() {
@@ -44,16 +54,14 @@ public class GrpcMyClient {
 
   public void sendRequest() {
     log.info("Start - " + LocalDateTime.now().toString());
-
-    MyServiceStub myServiceStub = MyServiceGrpc.newStub(myServiceBlockingStub.getChannel());
-    StreamObserver<HelloRequest> streamObserver = myServiceStub.subscribe(getResponseObserver());
     HelloRequest helloRequest = HelloRequest.newBuilder().setText("request").build();
     try {
-      streamObserver.onNext(helloRequest);
-      streamObserver.onCompleted();
+      this.streamObserver.onNext(helloRequest);
+      this.streamObserver.onCompleted();
     } catch (StatusRuntimeException ex) {
       log.info("Error", ex);
     }
+
     log.info("Stop - " + LocalDateTime.now().toString());
   }
 }
